@@ -1,432 +1,390 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Airplane Simulator Tracker</title>
+export default function AirplaneSimulatorTracker() {
+  const contractTypes = {
+    Passenger: 60000,
+    Cargo: 45000,
+    "Special Cargo": 55000,
+    Celebrity: 65000,
+    Presidential: 90000,
+  }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  const aircraftData = {
+    "X-15": {
+      speed: "Mach 6",
+      bestFor: "Cargo",
+    },
 
-<style>
-body{
-    margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#0b1020;
-    color:white;
-    overflow-x:hidden;
+    "VSS Unity": {
+      speed: "2750 MPH",
+      bestFor: "Celebrity / Presidential",
+    },
+
+    Airliner: {
+      speed: "Subsonic",
+      bestFor: "Passenger",
+    },
+  }
+
+  const [currentCash, setCurrentCash] = React.useState(106000000)
+  const [goalCash, setGoalCash] = React.useState(1173000000)
+
+  const [contractType, setContractType] = React.useState("Cargo")
+  const [aircraft, setAircraft] = React.useState("X-15")
+  const [minutes, setMinutes] = React.useState(2)
+  const [payout, setPayout] = React.useState(45000)
+
+  const [contracts, setContracts] = React.useState([])
+
+  React.useEffect(() => {
+    setPayout(contractTypes[contractType])
+  }, [contractType])
+
+  function addContract() {
+    const cashPerHour = Math.round((payout * 60) / minutes)
+    const xpPerHour = Math.round((1000 * 60) / minutes)
+
+    const newContract = {
+      id: Date.now(),
+      type: contractType,
+      aircraft,
+      payout,
+      minutes,
+      cashPerHour,
+      xpPerHour,
+      timestamp: new Date().toLocaleString(),
+    }
+
+    setContracts([newContract, ...contracts])
+    setCurrentCash(currentCash + payout)
+  }
+
+  const totalProfit = contracts.reduce(
+    (sum, c) => sum + c.payout,
+    0
+  )
+
+  const totalMinutes = contracts.reduce(
+    (sum, c) => sum + Number(c.minutes),
+    0
+  )
+
+  const totalContracts = contracts.length
+
+  const avgCashPerHour = totalMinutes
+    ? Math.round((totalProfit * 60) / totalMinutes)
+    : 0
+
+  const avgXPPerHour = totalMinutes
+    ? Math.round((totalContracts * 1000 * 60) / totalMinutes)
+    : 0
+
+  const remainingCash = goalCash - currentCash
+
+  const estimatedHours = avgCashPerHour
+    ? (remainingCash / avgCashPerHour).toFixed(1)
+    : 0
+
+  const progress = Math.min(
+    (currentCash / goalCash) * 100,
+    100
+  )
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-7xl mx-auto">
+
+        <div className="text-center mb-10">
+          <h1 className="text-6xl font-black text-red-500 mb-3">
+            TAR SKYLINK
+          </h1>
+
+          <p className="text-zinc-400 text-xl">
+            Airplane Simulator Empire Tracker
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+            <p className="text-zinc-400 mb-2">
+              Current Cash
+            </p>
+
+            <h2 className="text-4xl font-black text-green-400">
+              ${currentCash.toLocaleString()}
+            </h2>
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+            <p className="text-zinc-400 mb-2">
+              Goal Cash
+            </p>
+
+            <h2 className="text-4xl font-black text-yellow-400">
+              ${goalCash.toLocaleString()}
+            </h2>
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+            <p className="text-zinc-400 mb-2">
+              Average Cash/hr
+            </p>
+
+            <h2 className="text-4xl font-black text-cyan-400">
+              ${avgCashPerHour.toLocaleString()}
+            </h2>
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+            <p className="text-zinc-400 mb-2">
+              Average XP/hr
+            </p>
+
+            <h2 className="text-4xl font-black text-pink-400">
+              {avgXPPerHour.toLocaleString()}
+            </h2>
+          </div>
+
+        </div>
+
+        <div className="w-full bg-zinc-800 rounded-full h-8 overflow-hidden mb-10">
+          <div
+            className="bg-red-500 h-full transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8 mb-10">
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
+
+            <h2 className="text-3xl font-black mb-6 text-red-400">
+              Add Contract
+            </h2>
+
+            <div className="space-y-5">
+
+              <div>
+                <p className="mb-2 text-zinc-400">
+                  Contract Type
+                </p>
+
+                <select
+                  value={contractType}
+                  onChange={(e) =>
+                    setContractType(e.target.value)
+                  }
+                  className="w-full bg-black border border-zinc-700 rounded-2xl p-4"
+                >
+                  {Object.keys(contractTypes).map((type) => (
+                    <option key={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <p className="mb-2 text-zinc-400">
+                  Aircraft
+                </p>
+
+                <select
+                  value={aircraft}
+                  onChange={(e) =>
+                    setAircraft(e.target.value)
+                  }
+                  className="w-full bg-black border border-zinc-700 rounded-2xl p-4"
+                >
+                  {Object.keys(aircraftData).map((plane) => (
+                    <option key={plane}>
+                      {plane}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <p className="mb-2 text-zinc-400">
+                  Payout
+                </p>
+
+                <input
+                  type="number"
+                  value={payout}
+                  onChange={(e) =>
+                    setPayout(Number(e.target.value))
+                  }
+                  className="w-full bg-black border border-zinc-700 rounded-2xl p-4"
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 text-zinc-400">
+                  Minutes Taken
+                </p>
+
+                <input
+                  type="number"
+                  value={minutes}
+                  onChange={(e) =>
+                    setMinutes(Number(e.target.value))
+                  }
+                  className="w-full bg-black border border-zinc-700 rounded-2xl p-4"
+                />
+              </div>
+
+              <button
+                onClick={addContract}
+                className="w-full bg-red-600 hover:bg-red-500 transition rounded-2xl py-5 text-2xl font-black"
+              >
+                Add Contract
+              </button>
+
+            </div>
+
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
+
+            <h2 className="text-3xl font-black mb-6 text-cyan-400">
+              Empire Statistics
+            </h2>
+
+            <div className="space-y-5 text-xl">
+
+              <div className="flex justify-between">
+                <span className="text-zinc-400">
+                  Contracts Completed
+                </span>
+
+                <span className="font-black">
+                  {totalContracts}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-zinc-400">
+                  Total Profit
+                </span>
+
+                <span className="font-black text-green-400">
+                  ${totalProfit.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-zinc-400">
+                  Remaining To Goal
+                </span>
+
+                <span className="font-black text-yellow-400">
+                  ${remainingCash.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-zinc-400">
+                  Estimated Hours Remaining
+                </span>
+
+                <span className="font-black text-pink-400">
+                  {estimatedHours}
+                </span>
+              </div>
+
+            </div>
+
+            <div className="mt-10 bg-black rounded-3xl p-6 border border-zinc-800">
+              <h3 className="text-2xl font-black mb-4 text-red-400">
+                Selected Aircraft
+              </h3>
+
+              <p className="mb-2">
+                <span className="text-zinc-400">
+                  Aircraft:
+                </span>
+                {' '}
+                {aircraft}
+              </p>
+
+              <p className="mb-2">
+                <span className="text-zinc-400">
+                  Speed:
+                </span>
+                {' '}
+                {aircraftData[aircraft].speed}
+              </p>
+
+              <p>
+                <span className="text-zinc-400">
+                  Best For:
+                </span>
+                {' '}
+                {aircraftData[aircraft].bestFor}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
+
+          <h2 className="text-3xl font-black mb-6 text-yellow-400">
+            Contract History
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-zinc-800 text-zinc-400">
+                  <th className="text-left p-3">Type</th>
+                  <th className="text-left p-3">Aircraft</th>
+                  <th className="text-left p-3">Payout</th>
+                  <th className="text-left p-3">Time</th>
+                  <th className="text-left p-3">Cash/hr</th>
+                  <th className="text-left p-3">XP/hr</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {contracts.map((contract) => (
+                  <tr
+                    key={contract.id}
+                    className="border-b border-zinc-800"
+                  >
+                    <td className="p-3">
+                      {contract.type}
+                    </td>
+
+                    <td className="p-3">
+                      {contract.aircraft}
+                    </td>
+
+                    <td className="p-3 text-green-400 font-bold">
+                      ${contract.payout.toLocaleString()}
+                    </td>
+
+                    <td className="p-3">
+                      {contract.minutes} min
+                    </td>
+
+                    <td className="p-3 text-cyan-400 font-bold">
+                      ${contract.cashPerHour.toLocaleString()}
+                    </td>
+
+                    <td className="p-3 text-pink-400 font-bold">
+                      {contract.xpPerHour.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  )
 }
-
-.container{
-    max-width:1200px;
-    margin:auto;
-    padding:20px;
-}
-
-.title{
-    text-align:center;
-    font-size:48px;
-    font-weight:bold;
-    margin-top:20px;
-}
-
-.subtitle{
-    text-align:center;
-    color:#aaa;
-    margin-bottom:40px;
-}
-
-.card{
-    background:#141b34;
-    border:1px solid #26325f;
-    border-radius:20px;
-    padding:20px;
-    margin-bottom:25px;
-    box-shadow:0 0 25px rgba(0,0,0,.3);
-}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:15px;
-}
-
-button{
-    width:100%;
-    border:none;
-    border-radius:14px;
-    padding:16px;
-    font-size:16px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:.2s;
-}
-
-button:hover{
-    transform:scale(1.03);
-}
-
-.passenger{background:#2563eb;color:white;}
-.cargo{background:#16a34a;color:white;}
-.special{background:#ca8a04;color:white;}
-.celeb{background:#9333ea;color:white;}
-.pres{background:#dc2626;color:white;}
-
-.stats{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:15px;
-    margin-top:20px;
-}
-
-.stat{
-    background:#1c2649;
-    border-radius:16px;
-    padding:18px;
-    text-align:center;
-}
-
-.stat h2{
-    margin:0;
-    font-size:32px;
-}
-
-.stat p{
-    color:#aaa;
-}
-
-.section-title{
-    font-size:28px;
-    margin-bottom:20px;
-}
-
-input{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:12px;
-    background:#1d284d;
-    color:white;
-    font-size:16px;
-}
-
-.progress-container{
-    width:100%;
-    height:28px;
-    background:#1d284d;
-    border-radius:999px;
-    overflow:hidden;
-    margin-top:15px;
-}
-
-.progress-bar{
-    height:100%;
-    width:0%;
-    background:linear-gradient(90deg,#22c55e,#3b82f6);
-    transition:.3s;
-}
-
-.log{
-    max-height:300px;
-    overflow-y:auto;
-}
-
-.log-entry{
-    background:#1c2649;
-    padding:12px;
-    border-radius:12px;
-    margin-bottom:10px;
-}
-
-.reset{
-    background:#ef4444;
-    color:white;
-    margin-top:15px;
-}
-
-.save{
-    background:#22c55e;
-    color:white;
-}
-
-footer{
-    text-align:center;
-    color:#777;
-    margin-top:40px;
-    margin-bottom:20px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="title">✈️ Airplane Simulator Tracker</div>
-<div class="subtitle">
-Built for the grind. Legit leaderboard warfare.
-<br><br>
-Created by Ren (they_call_me_ren)
-</div>
-
-<div class="card">
-<div class="section-title">Contract Buttons</div>
-
-<div class="grid">
-<button class="passenger" onclick="addContract('Passenger',60000,5)">
-Passenger Contract
-<br>~60k
-</button>
-
-<button class="cargo" onclick="addContract('Cargo',45000,2)">
-Cargo Contract
-<br>~45k
-</button>
-
-<button class="special" onclick="addContract('Special Cargo',65000,2)">
-Special Cargo
-<br>55k+
-</button>
-
-<button class="celeb" onclick="addContract('Celebrity',80000,3)">
-Celebrity Contract
-<br>65k+
-</button>
-
-<button class="pres" onclick="addContract('Presidential',100000,4)">
-Presidential Contract
-<br>75k-100k
-</button>
-</div>
-</div>
-
-<div class="stats">
-
-<div class="stat">
-<h2 id="money">$0</h2>
-<p>Total Cash</p>
-</div>
-
-<div class="stat">
-<h2 id="exp">0</h2>
-<p>Total EXP</p>
-</div>
-
-<div class="stat">
-<h2 id="contracts">0</h2>
-<p>Total Contracts</p>
-</div>
-
-<div class="stat">
-<h2 id="hours">0h</h2>
-<p>Estimated Hours</p>
-</div>
-
-<div class="stat">
-<h2 id="cashrate">$0</h2>
-<p>Cash / Hour</p>
-</div>
-
-<div class="stat">
-<h2 id="rankgoal">0%</h2>
-<p>Cash Goal Progress</p>
-</div>
-
-</div>
-
-<div class="card">
-<div class="section-title">Cash Goal Tracker</div>
-
-<input type="number" id="goalInput" placeholder="Enter target cash amount">
-
-<button class="save" onclick="saveGoal()" style="margin-top:15px;">
-Save Goal
-</button>
-
-<div class="progress-container">
-<div class="progress-bar" id="progressBar"></div>
-</div>
-
-<p id="goalText">No goal set.</p>
-
-</div>
-
-<div class="card">
-<div class="section-title">Progress Graph</div>
-<canvas id="chart"></canvas>
-</div>
-
-<div class="card">
-<div class="section-title">Recent Contracts</div>
-
-<div class="log" id="log"></div>
-
-<button class="reset" onclick="resetData()">
-RESET EVERYTHING
-</button>
-
-</div>
-
-<footer>
-Tar Skylink forever.
-</footer>
-
-</div>
-
-<script>
-
-let totalMoney = Number(localStorage.getItem("as_money")) || 0
-let totalExp = Number(localStorage.getItem("as_exp")) || 0
-let totalContracts = Number(localStorage.getItem("as_contracts")) || 0
-let totalHours = Number(localStorage.getItem("as_hours")) || 0
-let logs = JSON.parse(localStorage.getItem("as_logs")) || []
-let goal = Number(localStorage.getItem("as_goal")) || 0
-let graphData = JSON.parse(localStorage.getItem("as_graph")) || []
-
-function updateUI(){
-
-document.getElementById("money").innerText =
-"$" + totalMoney.toLocaleString()
-
-document.getElementById("exp").innerText =
-totalExp.toLocaleString()
-
-document.getElementById("contracts").innerText =
-totalContracts.toLocaleString()
-
-document.getElementById("hours").innerText =
-totalHours.toFixed(1) + "h"
-
-let cashRate = totalHours > 0
-? Math.round(totalMoney / totalHours)
-: 0
-
-document.getElementById("cashrate").innerText =
-"$" + cashRate.toLocaleString()
-
-if(goal > 0){
-let progress = Math.min((totalMoney / goal) * 100,100)
-
-document.getElementById("rankgoal").innerText =
-progress.toFixed(1) + "%"
-
-document.getElementById("progressBar").style.width =
-progress + "%"
-
-document.getElementById("goalText").innerText =
-"$" + totalMoney.toLocaleString() +
-" / $" + goal.toLocaleString()
-}
-else{
-document.getElementById("goalText").innerText =
-"No goal set."
-}
-
-const logDiv = document.getElementById("log")
-logDiv.innerHTML = ""
-
-logs.slice().reverse().forEach(entry=>{
-let div = document.createElement("div")
-div.className = "log-entry"
-div.innerHTML = entry
-logDiv.appendChild(div)
-})
-
-updateChart()
-
-localStorage.setItem("as_money",totalMoney)
-localStorage.setItem("as_exp",totalExp)
-localStorage.setItem("as_contracts",totalContracts)
-localStorage.setItem("as_hours",totalHours)
-localStorage.setItem("as_logs",JSON.stringify(logs))
-localStorage.setItem("as_goal",goal)
-localStorage.setItem("as_graph",JSON.stringify(graphData))
-}
-
-function addContract(type,payout,time){
-
-totalMoney += payout
-totalExp += 1000
-totalContracts += 1
-totalHours += time/60
-
-logs.push(`
-<b>${type}</b><br>
-+$${payout.toLocaleString()}<br>
-+1,000 EXP<br>
-${new Date().toLocaleTimeString()}
-`)
-
-graphData.push({
-contracts:totalContracts,
-money:totalMoney
-})
-
-updateUI()
-}
-
-function saveGoal(){
-goal = Number(document.getElementById("goalInput").value)
-updateUI()
-}
-
-function resetData(){
-
-if(confirm("Reset EVERYTHING?")){
-localStorage.clear()
-location.reload()
-}
-
-}
-
-let chart
-
-function updateChart(){
-
-const ctx = document.getElementById('chart')
-
-const labels = graphData.map(x=>x.contracts)
-const data = graphData.map(x=>x.money)
-
-if(chart){
-chart.destroy()
-}
-
-chart = new Chart(ctx,{
-type:'line',
-data:{
-labels:labels,
-datasets:[{
-label:'Cash Progress',
-data:data,
-fill:false,
-tension:0.2
-}]
-},
-options:{
-plugins:{
-legend:{
-labels:{
-color:'white'
-}
-}
-},
-scales:{
-x:{
-ticks:{color:'white'},
-grid:{color:'#2a3769'}
-},
-y:{
-ticks:{color:'white'},
-grid:{color:'#2a3769'}
-}
-}
-}
-})
-}
-
-updateUI()
-
-</script>
-
-</body>
-</html>
